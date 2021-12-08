@@ -1,4 +1,6 @@
-"""Example DAG demonstrating the usage of the PythonOperator."""
+"""
+    Training pipeline for food model 
+"""
 import time
 from datetime import datetime
 from pprint import pprint
@@ -10,7 +12,7 @@ from airflow.operators.python import PythonOperator, PythonVirtualenvOperator
 from dags.utils.config import VERSION
 from dags.utils.transformers import *
 from dags.pipelines.model_pipeline.data import collect_milk_data, collect_prep_data, collect_bank_data
-from dags.pipelines.model_pipeline.data import merge_data
+from dags.pipelines.model_pipeline.data import merge_data, preprocess_data
 
 import pandas as pd
 import numpy as np
@@ -40,31 +42,31 @@ with DAG(
     ## Data Gathering 
     ###############################
 
-    base_path = os.path.join(AIRFLOW_HOME, 'airflow/dags/pipelines/model_pipeline/')
+    base_path = os.path.join(AIRFLOW_HOME, 'dags/pipelines/model_pipeline/')
 
     gather_milk_step = PythonOperator(
-        task_id=f'gather_milk_v{VERSION}',
+        task_id=f'gather_milk',
         python_callable=collect_milk_data,
         op_kwargs={
-            'path': 'base_path', 
+            'path': base_path, 
             'file_name': 'precio_leche.csv'
         }
     )
 
     gather_bank_step = PythonOperator(
-        task_id=f'gather_bank_v{VERSION}',
+        task_id=f'gather_bank',
         python_callable=collect_bank_data,
         op_kwargs={
-            'path': 'base_path', 
+            'path': base_path, 
             'file_name': 'banco_central.csv'
         }
     )
 
     gather_prec_step = PythonOperator(
-        task_id=f'gather_prec_v{VERSION}',
+        task_id=f'gather_prec',
         python_callable=collect_prep_data,
         op_kwargs={
-            'path': 'base_path', 
+            'path': base_path, 
             'file_name': 'precipitaciones.csv'
         }
     )
@@ -74,10 +76,27 @@ with DAG(
     ###############################
 
     merge_data_step = PythonOperator(
-        task_id='merge_data_v{VERSION}',
+        task_id=f'merge_data',
         python_callable=merge_data,
+        op_kwargs={
+            'path': base_path, 
+        }
+    )
+
+    ###############################
+    ###  Preprocessing data 
+    ###############################
+
+    preprocessing_step = PythonOperator(
+        task_id=f'preprocess_data',
+        python_callable=preprocess_data,
+        op_kwargs={
+            'path': base_path, 
+        }
     )
 
     gather_milk_step >> merge_data_step
     gather_bank_step >> merge_data_step
     gather_prec_step >> merge_data_step
+
+    merge_data_step >> preprocessing_step
