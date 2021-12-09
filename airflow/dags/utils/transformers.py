@@ -23,6 +23,21 @@ class TakeVariables(BaseEstimator, TransformerMixin):
         X = X[valid_cols]
         return X
 
+class DropNaTransformer(BaseEstimator, TransformerMixin):
+    """
+        Take a list of existing variables from the dataframe
+    """
+    def __init__(self, cols: list=[]):
+        self.cols = cols
+    
+    def fit(self, X: pd.DataFrame, y=None):
+        return self
+    
+    def transform(self, X: pd.DataFrame):
+        X = X.copy()
+        X = X.dropna()
+        return X
+
 class FixingFormattedString(BaseEstimator, TransformerMixin):
     """
         Fix financial numbers 
@@ -63,7 +78,7 @@ class RollingTransformer(BaseEstimator, TransformerMixin):
     """
         Perform rolling or shift operations over a set of existing variables
     """
-    def __init__(self, cols: list, window_size: int=3, method: str='mean'):
+    def __init__(self, cols: list, method: str='mean', window_size: int=3):
         self.cols = cols
         self.window_size = window_size
         self.method = method
@@ -78,13 +93,12 @@ class RollingTransformer(BaseEstimator, TransformerMixin):
         for col in self.cols:
             if col in X.columns:
                 if self.method == 'mean':
-                    feat = X[self.cols].rolling(window=self.window_size, min_periods=1).mean()
+                    feat = pd.DataFrame(X[col].rolling(window=self.window_size, min_periods=1).mean())
                 elif self.method == 'std':
-                    feat = X[self.cols].rolling(window=self.window_size, min_periods=1).std()
+                    feat = pd.DataFrame(X[col].rolling(window=self.window_size, min_periods=1).std())
                 else:
                     raise NotImplementedError
-
-                feat.columns = [f'{x}_rolling{self.window_size}_{self.method}' for x in feats.columns]
+                feat.columns = [f'{col}_rolling{self.window_size}_{self.method}']
                 feats.append(feat)
 
         if len(feats):
