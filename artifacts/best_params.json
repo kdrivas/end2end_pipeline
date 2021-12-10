@@ -1,0 +1,5 @@
+{
+    "model__alpha": 0.2,
+    "poly__degree": 1,
+    "selector__k": 7
+}

@@ -1,3 +1,10 @@
+# Model
+PARAM_GRID = {
+    'selector__k': [3, 4, 5, 6, 7, 10], # The best parameters found in the experimentation step (notebooks)
+    'model__alpha': [1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01],
+    'poly__degree': [1, 2, 3, 5, 7]
+}
+
 # Features
 TARGET_COL = 'target'
 

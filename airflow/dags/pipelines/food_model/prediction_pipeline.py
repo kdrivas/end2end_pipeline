@@ -1,5 +1,5 @@
 """
-    Training pipeline for food model 
+    Prediction pipeline for milk model 
 """
 import time
 from datetime import datetime
@@ -11,8 +11,10 @@ from airflow.operators.python import PythonOperator
 
 from dags.utils.config import VERSION
 from dags.utils.transformers import *
-from dags.pipelines.model_pipeline.data import collect_milk_data, collect_prep_data, collect_bank_data
-from dags.pipelines.model_pipeline.data import merge_data, preprocess_data, validate_data
+from dags.pipelines.food_model.data import collect_milk_data, collect_prep_data, collect_bank_data
+from dags.pipelines.food_model.data import merge_data, preprocess_batch_data, validate_prediction_data
+from dags.pipelines.food_model.model import batch_prediction_model
+from dags.pipelines.food_model.constants import PARAM_GRID
 
 import pandas as pd
 import numpy as np
@@ -23,18 +25,13 @@ locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 AIRFLOW_HOME = os.getenv('AIRFLOW_HOME')
 
 with DAG(
-    dag_id=f'preprocessing_{VERSION}',
+    dag_id=f'prediction_food_model_v{VERSION}',
     schedule_interval=None,
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=['example'],
 ) as dag:
-    # [START howto_operator_python]
-    def print_context(ds, **kwargs):
-        """Print the Airflow context and ds variable from the context."""
-        pprint(kwargs)
-        print(ds)
-        return 'Whatever you return gets printed in the logs'
+    # Repeat some steps
 
     ###############################
     ## Data Gathering 
@@ -87,8 +84,8 @@ with DAG(
     ###############################
 
     preprocessing_step = PythonOperator(
-        task_id=f'preprocess_data',
-        python_callable=preprocess_data,
+        task_id=f'preprocess_batch_data',
+        python_callable=preprocess_batch_data,
         op_kwargs={
             'data_path': data_path, 
             'artifact_path': artifact_path, 
@@ -99,11 +96,24 @@ with DAG(
     ###  Data validation 
     ###############################
 
-    validation_step = PythonOperator(
-        task_id=f'validate_data',
-        python_callable=validate_data,
+    validate_prediction_data = PythonOperator(
+        task_id=f'validate_prediction_data',
+        python_callable=validate_prediction_data,
         op_kwargs={
             'path': data_path, 
+        }
+    )
+
+    ###############################
+    ###  Batch prediction
+    ############################### 
+
+    batch_prediction_step = PythonOperator(
+        task_id=f'batch_prediction_model',
+        python_callable=batch_prediction_model,
+        op_kwargs={
+            'data_path': data_path, 
+            'artifact_path': artifact_path, 
         }
     )
 
@@ -111,4 +121,4 @@ with DAG(
     gather_bank_step >> merge_data_step
     gather_prec_step >> merge_data_step
 
-    merge_data_step >> preprocessing_step >> validation_step
+    merge_data_step >> preprocessing_step >> validate_prediction_data >> batch_prediction_step
