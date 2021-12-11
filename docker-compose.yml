@@ -231,5 +231,24 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  service:
+    build:
+      context: ./ml_service
+      dockerfile: Dockerfile
+    expose:
+      - 8000
+    volumes:
+      - ./data:/opt/data
+      - ./artifacts:/opt/artifacts
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - 8090:8090
+    volumes:
+      - ./nginx_config.conf:/etc/nginx/conf.d/default.conf
+    depends_on: 
+      - service
+
 volumes:
   postgres-db-volume:
