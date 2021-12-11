@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException
 import pandas as pd
+from typing import Dict
+import logging
 
 router = APIRouter(
   prefix="/api/v1",
@@ -12,6 +14,9 @@ def root():
 
 @router.get('/get_prediction', status_code=200)
 async def send_data(year: str, month: str):
+    """
+        Get the prediction for a specific period of time
+    """
     if year == '' or month == '':
         raise HTTPException(status_code=404, detail="Send year and month")
         
