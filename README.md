@@ -105,7 +105,7 @@ Consultar algun periodo existente dentro de la base de datos de prediccion
 
 **URL** : `/api/v1/get_online_prediction`
 
-**Method** : `GET`
+**Method** : `POST`
 
 #### Ejemplo
 
@@ -197,3 +197,10 @@ docker-compose up
 - Para consultar al API, mandar un request a alguna de las rutas especificadas en la seccion 4.
 
 ## Mejoras
+- Usar una BD para guardar la data y alguna herramienta que permita su versionamiento
+- Usar un feature store para guadar los features generados por operaciones de alto costo y que pueda reusarse ya se en otros proyectos o en tiempo de prediccion, por ejemplo, Feast
+- Usar alguna herramiento de monitoreo como Prometheus
+- Usar AWS, GCP o alguna herramienta en la nube que permita el versionamiento de los artefactos
+- Mejorar las pruebas tantos de datos como las del modelo.
+- Incorporar pruebas unitarias del API
+- Usar alguna herramienta como github actions para automatizar el codigo de las pruebas o de deploy
