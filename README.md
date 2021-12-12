@@ -15,7 +15,52 @@ En las siguientes secciones de la documencion se detallara los componentes defin
 3) Prediccion offline por batch
 4) Servicio de prediccion
 5) Ejecucion
-6) Mejoras
+6) Comentarios y mejoras
+
+## Estructura del proyecto
+
+```
+├── airflow
+│   ├── dags
+│   │   ├── __init__.py
+│   │   ├── pipelines
+│   │   │   ├── food_model
+│   │   │   │   ├── constants.py                # Se configuran las variables a preprocesar
+│   │   │   │   ├── data.py                     # Funciones relacionadas al preprocesamiento
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── model_pipeline.py           # DAG de entrenamiento del modelo
+│   │   │   │   ├── model.py                    # Funciones para el entrenamiento del modelo
+│   │   │   │   └── prediction_pipeline.py      # DAG de prediccion por batch
+│   │   │   └── __init__.py
+│   │   └── utils
+│   │       ├── config.py                       # Configuracion de los DAG's
+│   │       ├── __init__.py
+│   │       └── transformers.py                 # Contiene clases de preprocesamiento
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── setup.py
+├── app
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── score_router.py                     # Router 
+│   │   └── utils.py
+│   ├── __init__.py
+│   ├── log.config                              # Configuracion de los logs
+│   └── main.py                                 
+├── artifacts                                   # Se guardan los pipelines serializados
+├── data                                        # Se guarda la data
+│   ├── batch_predictions/                      # Se guardan las predicciones del batch
+│   ├── feature_store/                          
+│   ├── interm/                                 # data resultante de pasos intermendios
+│   ├── preprocessed/                           # Se guarda la data luego de ser procesada
+│   └── raw/                                    # Se guarda la data en crudo
+├── docker-compose.yml
+├── Dockerfile
+├── docs
+├── nginx_config.conf
+├── README.md
+└── requirements.txt
+```
 
 ## Entrenamiento del modelo
 En esta fase se realiza el entrenamiento del modelo y preprocesamiento de la data, asi como tambien, la serializacion de los pipelines generados en estas etapas. Por cada paso, se guarda la data a modo de versionamiento. Tanto los pipelines como la data de output de cada etapa, se guarda de manera local en .pkl o .csv. Idealmente, seria mejor manejar un bucket de AWS o GCP para el guardado de los artefactos (pipeline de entrenamiento y preprocesamiento) y una BD o un bucket con versionamiento para los datos procesados. En la *Fig.1*, se detallan los pasos que componen el dag del entrenamiento del modelo en Airflow.
@@ -52,12 +97,14 @@ A continuacion se detalla el objetivo de los pasos mostrados en la *Fig.2*:
 ## Servicio de prediccion
 El servicio se construyo usando fastAPI y se disponibiliza a traves de Nginx. La configuracion usada es una muy simple.
 
+Por otro lado, se uso una configuracion para guardar los logs dentro del servidor. Esta configuracion esta en `/app/log.config`
+
 Respecto a las rutas del servicio, se disponibilizaron las siguientes:
 
 ### Health check
 Consultar a esta ruta para verificar que el api este activo
 
-**URL** : `/check_service`
+**URL** : `localhost:8090/check_service`
 
 **Method** : `GET`
 
@@ -80,7 +127,7 @@ curl --location --request GET 'localhost:8090/check_service'
 ### Predicion offline (batch)
 Consultar algun periodo existente dentro de la base de datos de prediccion
 
-**URL** : `/api/v1/get_prediction`
+**URL** : `localhost:8090/api/v1/get_prediction`
 
 **Method** : `GET`
 
@@ -103,7 +150,7 @@ curl --location --request GET 'localhost:8090/api/v1/get_prediction?year=2014&mo
 ### Predicion en tiempo real (batch)
 Consultar algun periodo existente dentro de la base de datos de prediccion
 
-**URL** : `/api/v1/get_online_prediction`
+**URL** : `localhost:8090/api/v1/get_online_prediction`
 
 **Method** : `POST`
 
@@ -196,7 +243,7 @@ docker-compose up
 - Si se deseea ejecutar la prediccion por batch, se debe ingresar a la ruta `localhost:8080` y buscar el dag `prediction_food_model_v1_0_0`
 - Para consultar al API, mandar un request a alguna de las rutas especificadas en la seccion 4.
 
-## Mejoras
+## Comentarios y mejoras
 - Usar una BD para guardar la data y alguna herramienta que permita su versionamiento
 - Usar un feature store para guadar los features generados por operaciones de alto costo y que pueda reusarse ya se en otros proyectos o en tiempo de prediccion, por ejemplo, Feast
 - Usar alguna herramiento de monitoreo como Prometheus
@@ -204,3 +251,4 @@ docker-compose up
 - Mejorar las pruebas tantos de datos como las del modelo.
 - Incorporar pruebas unitarias del API
 - Usar alguna herramienta como github actions para automatizar el codigo de las pruebas o de deploy
+- Finalmente, se opto por hacerle deploy al modelo que considera todas las variables ya que es el que tiene mejores resultados en validacion
