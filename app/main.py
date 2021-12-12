@@ -4,7 +4,7 @@ import logging
 
 app = FastAPI()
 
-logging.config.fileConfig('log.config', disable_existing_loggers=False)
+logging.config.fileConfig('log.config')
 
 app.include_router(score_router.router)
 

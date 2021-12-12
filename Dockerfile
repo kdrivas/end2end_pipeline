@@ -7,6 +7,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+
+COPY airflow .
+RUN pip install -e . 
+
 COPY app/ .
 
 EXPOSE 8000

@@ -232,11 +232,9 @@ services:
         condition: service_completed_successfully
 
   service:
-    build:
-      context: ./ml_service
-      dockerfile: Dockerfile
-    expose:
-      - 8000
+    build: .
+    ports:
+      - 8000:8000
     volumes:
       - ./data:/opt/data
       - ./artifacts:/opt/artifacts
