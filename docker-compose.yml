@@ -231,13 +231,38 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  db:
+    image: postgres:12.1-alpine
+    environment: 
+      - POSTGRES_USER=db_username
+      - POSTGRES_PASSWORD=db_password
+      - POSTGRES_DB=db_dev
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+      PGADMIN_LISTEN_PORT: 9988
+    ports:
+      - "9988:9988"
+
   service:
     build: .
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; alembic upgrade head; uvicorn main:app --port 8000 --host 0.0.0.0 --log-config log.config'
     expose:
       - 8000
     volumes:
       - ./data:/opt/data
       - ./artifacts:/opt/artifacts
+    environment:
+      DATABASE_CONN: postgresql://db_username:db_password@db/db_dev
+    depends_on:
+      - db
 
   nginx:
     image: nginx:latest
