@@ -115,6 +115,6 @@ async def send_online_data(payload: Dict, db = Depends(get_session)):
             pred = preds[-1]
         )
     
-    new_item = create_record(db, item)
+        new_item = create_record(db, item)
 
     return {'prediction': preds[-1]} 
