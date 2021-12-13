@@ -41,6 +41,8 @@ En las siguientes secciones de la documencion se detallara los componentes defin
 │   └── setup.py
 ├── app
 │   ├── app
+│   ├── alembic                                 # Alembic folder
+│   ├── alembic.ini
 │   │   ├── __init__.py
 │   │   ├── score_router.py                     # Router 
 │   │   └── utils.py
