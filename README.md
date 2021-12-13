@@ -1,6 +1,6 @@
 # MLOPS end2end toy project
 
-Stack: airflow + fastAPI + Nginx
+Stack: airflow + fastAPI + Nginx + PostgreSQL + Alembic
 
 # Overview
 Este proyecto contiene los archivos necesarios para entrenar y poner en produccion un modelo que predice el precio de la leche basandose en variables de precipitacion, financieras y precios pasados de la leche. 
@@ -98,6 +98,15 @@ A continuacion se detalla el objetivo de los pasos mostrados en la *Fig.2*:
 El servicio se construyo usando fastAPI y se disponibiliza a traves de Nginx. La configuracion usada es una muy simple.
 
 Por otro lado, se uso una configuracion para guardar los logs dentro del servidor. Esta configuracion esta en `/app/log.config`
+
+Tambien se incorporo una BD en PostgreSQL con el fin de guardar tanto la data enviada como la prediccion. Debido a que son 3 registros por peticion, se creo un *DummyUniqueID* que identificase la data de una sola peticion. Se puede ingresar a ver esta informacion en la ruta `localhost:9988` con las credenciales *admin@admin.com* para user y *root* para el pass. Se debe configurar el acceso al servidor desde PGAdmin usando los siguientes parametros.
+
+```
+HOST_NAME=db
+POSTGRES_USER=db_username
+POSTGRES_PASSWORD=db_password
+POSTGRES_DB=db_dev
+```
 
 Respecto a las rutas del servicio, se disponibilizaron las siguientes:
 
